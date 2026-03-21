@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1773671443501,
+      "tag": "0000_windy_mister_fear",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773763082535,
+      "tag": "0001_aberrant_obadiah_stane",
+      "breakpoints": true
+    }
+  ]
+}

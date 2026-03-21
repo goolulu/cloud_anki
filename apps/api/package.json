@@ -1,0 +1,28 @@
+{
+  "name": "@cloud-anki/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=.env --import tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "echo 'no lint configured'",
+    "test": "node --test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@cloud-anki/shared": "*",
+    "@hono/node-server": "^1.19.11",
+    "@libsql/client": "^0.17.0",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.8",
+    "nanoid": "^5.1.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.2"
+  }
+}
