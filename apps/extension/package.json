@@ -1,0 +1,21 @@
+{
+  "name": "@cloud-anki/extension",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -p tsconfig.json --watch",
+    "build": "tsc -p tsconfig.json && node -e \"const fs = require('node:fs'); fs.copyFileSync('manifest.json', 'dist/manifest.json');\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured'",
+    "test": "vitest run --environment jsdom"
+  },
+  "dependencies": {
+    "@cloud-anki/shared": "*"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "typescript": "^5.8.2",
+    "vitest": "^2.1.9"
+  }
+}
