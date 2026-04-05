@@ -52,14 +52,6 @@ export const NormalizedCardSchema = z.object({
       analysis: z.string().optional().default(''),
     })
     .optional(),
-  synonyms: z.array(z.string()).optional().default([]),
-  collocations: z.array(z.string()).optional().default([]),
-  audio: z
-    .object({
-      url: z.string().url(),
-      format: z.string().optional().default(''),
-    })
-    .optional(),
   source: z
     .object({
       url: z.string().url(),

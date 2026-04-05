@@ -49,30 +49,6 @@ app.use('*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true }));
 
-app.post('/v1/preview', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const parsed = CollectRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: 'invalid_body', details: parsed.error.flatten() }, 400);
-  }
-
-  const req = parsed.data;
-
-  const card = await dictionary.analyze({
-    word: req.word,
-    context: req.context ?? '',
-    sourceUrl: req.sourceUrl,
-    lang: req.lang,
-  });
-
-  const cardParsed = NormalizedCardSchema.safeParse(card);
-  if (!cardParsed.success) {
-    return c.json({ error: 'provider_invalid_card', details: cardParsed.error.flatten() }, 500);
-  }
-
-  return c.json({ card: cardParsed.data });
-});
-
 app.post('/v1/collect', async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = CollectRequestSchema.safeParse(body);

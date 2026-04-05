@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const extensionDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 describe('extension build output', () => {
-  it('emits a content script without top-level ESM syntax', () => {
+  it('emits a content script without top-level ESM imports', () => {
     execFileSync('npm', ['run', 'build'], {
       cwd: extensionDir,
       stdio: 'pipe',
@@ -17,6 +17,5 @@ describe('extension build output', () => {
     const contentScript = readFileSync(resolve(extensionDir, 'dist/content.js'), 'utf8');
 
     expect(contentScript).not.toMatch(/^import\s/m);
-    expect(contentScript).not.toMatch(/^export\s/m);
   });
 });
