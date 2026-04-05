@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "cloud-anki": "file:"
   }
 }
