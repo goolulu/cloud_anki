@@ -49,8 +49,12 @@ beforeEach(async () => {
   selection?.removeAllRanges();
   selection?.addRange(range);
 
-  const module = await import('../src/content.ts');
-  cleanup = module.initContentScript();
+  await import('../src/content.ts');
+  cleanup = (
+    globalThis as typeof globalThis & {
+      __cloudAnkiInitContentScript__?: () => (() => void) | null;
+    }
+  ).__cloudAnkiInitContentScript__?.() ?? undefined;
 });
 
 afterEach(() => {
@@ -84,6 +88,6 @@ test('collects the current selection when asked by the background script', async
   });
 
   await vi.waitFor(() => {
-    expect(document.documentElement.textContent).toContain('Saved “serendipity” to Cloud Anki.');
+    expect(document.documentElement.textContent).toContain('Saved "serendipity" to Cloud Anki.');
   });
 });

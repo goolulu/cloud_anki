@@ -34,6 +34,12 @@ export class MockDictionaryProvider implements DictionaryProvider {
         affixes: [],
         analysis: '',
       },
+      synonyms: [],
+      collocations: [],
+      audio: {
+        url: 'https://example.com/audio.mp3',
+        format: 'mp3',
+      },
       source: {
         url: sourceUrl,
         context,

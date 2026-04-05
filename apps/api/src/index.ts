@@ -33,6 +33,40 @@ const dictionary = new MockDictionaryProvider();
 
 const app = new Hono();
 
+async function buildNormalizedCard(body: unknown) {
+  const parsed = CollectRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return {
+      ok: false as const,
+      response: { error: 'invalid_body', details: parsed.error.flatten() },
+      status: 400 as const,
+    };
+  }
+
+  const req = parsed.data;
+  const card = await dictionary.analyze({
+    word: req.word,
+    context: req.context ?? '',
+    sourceUrl: req.sourceUrl,
+    lang: req.lang,
+  });
+
+  const cardParsed = NormalizedCardSchema.safeParse(card);
+  if (!cardParsed.success) {
+    return {
+      ok: false as const,
+      response: { error: 'provider_invalid_card', details: cardParsed.error.flatten() },
+      status: 500 as const,
+    };
+  }
+
+  return {
+    ok: true as const,
+    request: req,
+    card: cardParsed.data,
+  };
+}
+
 // Basic CORS for web + extension
 app.use('*', async (c, next) => {
   c.header('Access-Control-Allow-Origin', '*');
@@ -49,35 +83,35 @@ app.use('*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true }));
 
+app.post('/v1/preview', async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const result = await buildNormalizedCard(body);
+
+  if (!result.ok) {
+    return c.json(result.response, result.status);
+  }
+
+  return c.json({ card: result.card });
+});
+
 app.post('/v1/collect', async (c) => {
   const body = await c.req.json().catch(() => null);
-  const parsed = CollectRequestSchema.safeParse(body);
-  if (!parsed.success) {
-    return c.json({ error: 'invalid_body', details: parsed.error.flatten() }, 400);
+  const result = await buildNormalizedCard(body);
+  if (!result.ok) {
+    return c.json(result.response, result.status);
   }
 
   const now = Date.now();
-  const req = parsed.data;
+  const req = result.request;
+  const cardParsed = result.card;
 
-  const card = await dictionary.analyze({
-    word: req.word,
-    context: req.context ?? '',
-    sourceUrl: req.sourceUrl,
-    lang: req.lang,
-  });
-
-  const cardParsed = NormalizedCardSchema.safeParse(card);
-  if (!cardParsed.success) {
-    return c.json({ error: 'provider_invalid_card', details: cardParsed.error.flatten() }, 500);
-  }
-
-  const cardId = cardParsed.data.id ?? nanoid();
+  const cardId = cardParsed.id ?? nanoid();
 
   await db.insert(cards).values({
     id: cardId,
     word: req.word,
     lang: req.lang,
-    normalizedJson: JSON.stringify({ ...cardParsed.data, id: cardId }),
+    normalizedJson: JSON.stringify({ ...cardParsed, id: cardId }),
     createdAt: new Date(now),
   });
 

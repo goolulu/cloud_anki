@@ -45,6 +45,10 @@ describe('content script', () => {
     ) as HTMLButtonElement | undefined;
   }
 
+  function getPreviewCard() {
+    return document.getElementById('__cloud_anki_preview_card__');
+  }
+
   async function flushAsyncWork() {
     await Promise.resolve();
     await Promise.resolve();
@@ -64,8 +68,12 @@ describe('content script', () => {
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    const module = await import('../src/content.ts');
-    cleanup = module.initContentScript();
+    await import('../src/content.ts');
+    cleanup = (
+      globalThis as typeof globalThis & {
+        __cloudAnkiInitContentScript__?: () => (() => void) | null;
+      }
+    ).__cloudAnkiInitContentScript__?.() ?? undefined;
   });
 
   afterEach(() => {
@@ -77,30 +85,75 @@ describe('content script', () => {
     vi.useRealTimers();
   });
 
-  it('shows a floating Collect button near the current selection and hides it after the selection clears', () => {
+  it('shows a floating preview near the current selection and hides it after the selection clears', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        card: {
+          word: 'hello',
+          phonetic: '/həˈləʊ/',
+          pos: ['interj.'],
+          senses: [{ gloss: 'greeting', cn: '你好', examples: ['hello world from cloud anki'] }],
+          synonyms: ['hi'],
+          collocations: ['hello there'],
+          audio: { url: 'https://example.com/audio.mp3', format: 'mp3' },
+          source: { url: window.location.href, context: 'hello world from cloud anki' },
+          template: 'basic_bilingual',
+        },
+      }),
+    } as Response);
+
     selectSourceText(0, 5);
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await flushAsyncWork();
 
-    const button = getCollectButton();
-    expect(button).toBeDefined();
-    expect(button?.style.position).toBe('fixed');
-    expect(button?.style.top).not.toBe('');
-    expect(button?.style.left).not.toBe('');
+    const card = getPreviewCard();
+    expect(card).toBeDefined();
+    expect(card?.textContent).toContain('Cloud Anki Preview');
+    expect(card?.textContent).toContain('hello');
+    expect(card?.style.position).toBe('fixed');
+    expect(card?.style.top).not.toBe('');
+    expect(card?.style.left).not.toBe('');
+
+    await vi.waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:8787/v1/preview',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
 
     clearSelection();
     document.dispatchEvent(new Event('selectionchange'));
 
-    expect(getCollectButton()).toBeUndefined();
+    expect(getPreviewCard()).toBeNull();
   });
 
-  it('collects the current selection when the floating button is clicked', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({ collectId: 'collect-1', cardId: 'card-1' }),
-    } as Response);
+  it('collects the current selection when the preview button is clicked', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          card: {
+            word: 'hello',
+            phonetic: '/həˈləʊ/',
+            pos: ['interj.'],
+            senses: [{ gloss: 'greeting', cn: '你好', examples: ['hello world from cloud anki'] }],
+            synonyms: ['hi'],
+            collocations: ['hello there'],
+            audio: { url: 'https://example.com/audio.mp3', format: 'mp3' },
+            source: { url: window.location.href, context: 'hello world from cloud anki' },
+            template: 'basic_bilingual',
+          },
+        }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ collectId: 'collect-1', cardId: 'card-1' }),
+      } as Response);
 
     selectSourceText(0, 5);
     document.dispatchEvent(new Event('selectionchange'));
+    await flushAsyncWork();
 
     const button = getCollectButton();
     expect(button).toBeDefined();

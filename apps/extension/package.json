@@ -1,11 +1,11 @@
 {
   "name": "@cloud-anki/extension",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsc -p tsconfig.json --watch",
-    "build": "tsc -p tsconfig.json && node -e \"const fs = require('node:fs'); fs.copyFileSync('manifest.json', 'dist/manifest.json');\"",
+    "build": "tsc -p tsconfig.json && node -e \"const fs = require('node:fs'); fs.copyFileSync('manifest.json', 'dist/manifest.json'); const contentPath = 'dist/content.js'; const content = fs.readFileSync(contentPath, 'utf8').replace(/\\r?\\nexport \\{\\};\\s*$/u, '\\n'); fs.writeFileSync(contentPath, content);\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'no lint configured'",
     "test": "vitest run --environment jsdom"
