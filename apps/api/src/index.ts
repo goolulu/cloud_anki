@@ -9,11 +9,15 @@ import { CollectRequestSchema, NormalizedCardSchema, ExportRowSchema } from '@cl
 
 import { makeDb } from './db/client.js';
 import { collects, cards } from './db/schema.js';
-import { MockDictionaryProvider } from './services/dictionary.js';
+import { createDictionaryProvider } from './services/dictionary.js';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(8787),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_BASE_URL: z.string().url().optional(),
+  OPENAI_MODEL: z.string().optional(),
+  OPENAI_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -29,7 +33,12 @@ function readEnv(): Env {
 
 const env = readEnv();
 const db = makeDb(env.DATABASE_URL);
-const dictionary = new MockDictionaryProvider();
+const dictionary = createDictionaryProvider({
+  apiKey: env.OPENAI_API_KEY,
+  baseUrl: env.OPENAI_BASE_URL,
+  model: env.OPENAI_MODEL,
+  timeoutMs: env.OPENAI_TIMEOUT_MS,
+});
 
 const app = new Hono();
 
