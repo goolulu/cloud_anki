@@ -1,0 +1,14 @@
+.git
+.worktrees
+node_modules
+**/node_modules
+dist
+**/dist
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+coverage
+*.log
